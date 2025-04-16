@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Faction {
+  BABYLON
+  HALICARNASSUS
+  EPHESUS
+  RHODES
+  OLYMPIA
+  GIZA
+  ALEXANDRIA
+}
+
+enum FactionSide {
+  DAY
+  NIGHT
+}
+
+enum GameStatus {
+  WAITING
+  IN_PROGRESS
+  FINISHED
+}
+
+model User {
+  id          String         @id @default(uuid())
+  username    String         @unique
+  isGuest     Boolean        @default(false)
+  email       String         @unique
+  password    String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  statistics  UserStatistic?
+  games       GamePlayer[]
+  gamesHosted Game[]
+}
+
+model UserStatistic {
+  id                     String   @id @default(uuid())
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                 String   @unique
+  gamesPlayed            Int      @default(0)
+  gamesWon               Int      @default(0)
+  highestScore           Int      @default(0)
+  averageScore           Float    @default(0.0)
+  totalMilitaryVictories Int      @default(0)
+  totalMilitaryDefeats   Int      @default(0)
+  coinsEarned            Int      @default(0)
+  coinsSpent             Int      @default(0)
+  favoriteFaction        Faction?
+  bestPlayedFaction      Faction?
+  favoriteCard           String?
+  factionPlayCounts      Json     @default("{}")
+  cardUsageCounts        Json     @default("{}")
+}
+
+model Game {
+  id          String       @id @default(uuid())
+  name        String
+  hostedById  String?
+  hostedBy    User?        @relation(fields: [hostedById], references: [id])
+  status      GameStatus   @default(WAITING)
+  createdAt   DateTime     @default(now())
+  finishedAt  DateTime?
+  players     GamePlayer[]
+  finalBoard  Json?
+  finalScores Json?
+}
+
+model GamePlayer {
+  id             String      @id @default(uuid())
+  gameId         String
+  game           Game        @relation(fields: [gameId], references: [id])
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id])
+  guestName      String?
+  faction        Faction
+  factionSide    FactionSide
+  finalScore     Int         @default(0)
+  scoreBreakdown Json?
+}
