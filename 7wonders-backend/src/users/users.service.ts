@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 
@@ -7,6 +11,21 @@ export class UsersService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async create(createUserDto: Prisma.UserCreateInput) {
+    // Check if the user already exists by email or username
+    const existingUser = await this.databaseService.user.findFirst({
+      where: {
+        OR: [
+          { email: createUserDto.email },
+          { username: createUserDto.username },
+        ],
+      },
+    });
+    if (existingUser) {
+      throw new ConflictException(
+        'User with this email or username already exists',
+      );
+    }
+
     return this.databaseService.user.create({
       data: {
         ...createUserDto,
@@ -26,6 +45,36 @@ export class UsersService {
       return await this.databaseService.user.findUniqueOrThrow({
         where: {
           id,
+        },
+        include: {
+          statistics: true,
+        },
+      });
+    } catch (e) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async findOneByUsername(username: string) {
+    try {
+      return await this.databaseService.user.findUniqueOrThrow({
+        where: {
+          username,
+        },
+        include: {
+          statistics: true,
+        },
+      });
+    } catch (e) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async findOneByEmail(email: string) {
+    try {
+      return await this.databaseService.user.findUniqueOrThrow({
+        where: {
+          email,
         },
         include: {
           statistics: true,
@@ -59,5 +108,17 @@ export class UsersService {
     } catch (e) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  async updateRefreshToken(
+    userId: string,
+    refreshToken: string | null,
+  ): Promise<void> {
+    await this.databaseService.user.update({
+      where: {
+        id: userId,
+      },
+      data: { refreshToken },
+    });
   }
 }

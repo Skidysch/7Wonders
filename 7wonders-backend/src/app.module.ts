@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersService } from './users/users.service';
@@ -10,13 +10,16 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { LobbiesModule } from './lobbies/lobbies.module';
 import { RedisService } from './redis/redis.service';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    UsersModule,
     DatabaseModule,
+    AuthModule,
+    UsersModule,
     GamesModule,
     LobbiesModule,
+    // ThrottlerModule limits the number of requests to the server
     ThrottlerModule.forRoot([
       {
         name: 'short',
