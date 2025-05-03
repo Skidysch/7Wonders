@@ -1,13 +1,13 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { RedisService } from 'src/redis/redis.service';
 import { LobbiesController } from './lobbies.controller';
+import { RedisModule } from 'src/redis/redis.module';
 import { LobbiesService } from './lobbies.service';
 import { GamesModule } from 'src/games/games.module'
 
 @Module({
-  imports: [forwardRef(() => GamesModule)],
+  imports: [forwardRef(() => GamesModule), RedisModule],
   controllers: [LobbiesController],
-  providers: [LobbiesService, RedisService],
+  providers: [LobbiesService],
   exports: [LobbiesService],
 })
 export class LobbiesModule {}

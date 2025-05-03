@@ -12,6 +12,7 @@ export class GamesService {
     private readonly lobbyService: LobbiesService,
   ) {}
 
+  // TODO: Consider creating a game only if user is authenticated
   async create(createGameDto: Prisma.GameCreateInput) {
     const game = await this.databaseService.game.create({
       data: createGameDto,
@@ -85,5 +86,6 @@ export class GamesService {
     }
   }
 
-  // TODO: Handle host leaving game
+  // TODO: Handle host leaving game (e.g. transfer host to another player)
 }
+  

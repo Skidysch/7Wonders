@@ -1,4 +1,4 @@
-import { Module} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersService } from './users/users.service';
@@ -9,8 +9,8 @@ import { GamesModule } from './games/games.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { LobbiesModule } from './lobbies/lobbies.module';
-import { RedisService } from './redis/redis.service';
 import { AuthModule } from './auth/auth.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -33,6 +33,7 @@ import { AuthModule } from './auth/auth.module';
       },
     ]),
     LobbiesModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [
@@ -43,7 +44,6 @@ import { AuthModule } from './auth/auth.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    RedisService,
   ],
 })
 export class AppModule {}
