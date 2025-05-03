@@ -88,6 +88,7 @@ export class LobbiesService {
     return player;
   }
 
+  // FIXME: Do we have to deete lobby if game is started?
   async startGame(gameId: string) {
     try {
       const players = await this.getLobbyPlayers(gameId);
