@@ -11,9 +11,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { LobbiesModule } from './lobbies/lobbies.module';
 import { AuthModule } from './auth/auth.module';
 import { RedisModule } from './redis/redis.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     DatabaseModule,
     AuthModule,
     UsersModule,
