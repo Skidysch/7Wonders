@@ -1,36 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant:ital,wght@0,300..700;1,300..700&display=swap');
+@import 'tailwindcss';
 @import './base.css';
-@import "tailwindcss";
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+@theme {
+  --font-cinzel: Cinzel, 'serif';
+  --font-cormorant: Cormorant, 'serif';
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-dark: var(--color-secondary-dark);
+  --color-gradient: var(--color-gradient);
 }
 
-a,
-.green {
+#app {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 122px;
+  font-family: var(--font-cormorant);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-cinzel);
+}
+
+a {
+  color: var(--color-black);
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+  transition: ease-in-out 0.3s;
 }
 
 @media (hover: hover) {
   a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+    color: var(--color-secondary);
   }
 }
 
 @media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+  
 }
