@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant:ital,wght@0,300..700;1,300..700&display=swap');
 @import 'tailwindcss';
+@import 'primeicons/primeicons.css';
 @import './base.css';
 
 @theme {
@@ -10,6 +11,14 @@
   --color-secondary: var(--color-secondary);
   --color-secondary-dark: var(--color-secondary-dark);
   --color-gradient: var(--color-gradient);
+
+  --color-black: var(--vt-c-black);
+  --color-black-75: var(--vt-c-black-75);
+  --color-black-50: var(--vt-c-black-50);
+  --color-black-25: var(--vt-c-black-25);
+  --color-black-10: var(--vt-c-black-10);
+  --color-black-5: var(--vt-c-black-5);
+  --color-white: var(--vt-c-white);
 }
 
 #app {
@@ -39,5 +48,4 @@ a {
 }
 
 @media (min-width: 1024px) {
-  
 }

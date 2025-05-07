@@ -3,7 +3,7 @@ import Button from '@/components/Button.vue'
 import hero from '@/assets/hero-bg.jpg'
 </script>
 <template>
-  <div class="w-full h-full flex">
+  <div class="w-full h-full flex grow">
     <div
       class="w-1/2 h-full flex flex-col justify-center items-center gap-10 text-center self-center"
     >

@@ -5,16 +5,20 @@ import Button from '@/components/Button.vue'
 <template>
   <header class="w-full flex justify-between py-4 items-center">
     <div class="cursor-pointer">
-      <img :src="logo" alt="7 Wonders Logo" class="h-16" />
+      <RouterLink to="/">
+        <img :src="logo" alt="7 Wonders Logo" class="h-16" />
+      </RouterLink>
     </div>
     <nav>
       <ul class="flex gap-16 font-bold">
-        <li><a href="#lobbies">Lobbies</a></li>
-        <li><a href="#rules">Rules</a></li>
+        <li><RouterLink to="/lobbies">Lobbies</RouterLink></li>
+        <li><RouterLink to="/rules">Rules</RouterLink></li>
       </ul>
     </nav>
     <div>
-      <Button text="Log in" />
+      <RouterLink to="/signin">
+        <Button text="Log in" />
+      </RouterLink>
     </div>
   </header>
 </template>
