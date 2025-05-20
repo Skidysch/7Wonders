@@ -1,9 +1,9 @@
-import { LobbyPlayer } from 'src/types/lobby-player.interface';
+import { LobbyData } from 'src/types/lobby.interface';
 
-export const isLobbyFull = (lobby: LobbyPlayer[]) => {
-  return lobby.length >= 7;
+export const isLobbyFull = (lobby: LobbyData): boolean => {
+  return lobby.players.length >= lobby.maxPlayers;
 };
 
-export const userIsInLobby = (lobby: LobbyPlayer[], userId: string) => {
-  return lobby.some((player) => player.userId === userId);
+export const userIsInLobby = (lobby: LobbyData, userId: string): boolean => {
+  return lobby.players.some((player) => player.userId === userId);
 };

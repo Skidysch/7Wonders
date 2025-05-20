@@ -1,39 +1,56 @@
 <script setup lang="ts">
-// Тут будут прогружаться список лобби
-// TODO: добавить логику для получения списка лобби
 import Button from '@/components/Button.vue'
-const lobbies = [
-  {
-    id: 1,
-    name: 'Lobby 1',
-    numPlayers: 2,
-    maxPlayers: 4,
-    status: 'Waiting',
-  },
-  {
-    id: 2,
-    name: 'Lobby 2',
-    numPlayers: 3,
-    maxPlayers: 4,
-    status: 'In Progress',
-  },
-  {
-    id: 3,
-    name: 'Lobby 3',
-    numPlayers: 1,
-    maxPlayers: 4,
-    status: 'Waiting',
-  },
-]
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useLobbiesStore } from '@/stores/lobbies'
+import api from '@/api/axios'
+
+const router = useRouter()
+const lobbiesStore = useLobbiesStore()
+const gameName = ref('')
+
+onMounted(() => {
+  lobbiesStore.fetchActiveLobbies()
+
+  // Polling
+  const intervalId = setInterval(() => {
+    lobbiesStore.fetchActiveLobbies()
+  }, 5000)
+
+  onUnmounted(() => {
+    clearInterval(intervalId)
+  })
+})
+
+function joinLobby(gameId: string) {
+  lobbiesStore.joinLobby(gameId)
+  console.log('activeLobbies', lobbiesStore.activeLobbies)
+  // Router will handle navigation when lobby is joined successfully
+  // via the lobbyUpdated event in the store
+}
+
+function leaveLobby(gameId: string) {
+  lobbiesStore.leaveLobby(gameId)
+  // Router will handle navigation when lobby is joined successfully
+  // via the lobbyUpdated event in the store
+}
+
+async function createGame() {
+  await api.post('/games', {
+    name: gameName.value,
+  })
+  gameName.value = ''
+}
 </script>
 
 <template>
   <section class="mt-8 flex flex-col gap-10 items center">
     <div class="py-4 px-12 rounded-xl bg-black-25 flex flex-col gap-2 items-start">
       <h3 class="font-semibold text-3xl text-white text-shadow-lg">Create game</h3>
-      <form class="flex gap-2">
+      <form @submit.prevent="createGame" class="flex gap-2">
         <input
           type="text"
+          v-model="gameName"
           placeholder="Game name"
           class="px-3 py-1 rounded-sm border border-white outline-none text-white"
         />
@@ -59,7 +76,7 @@ const lobbies = [
           <!-- Rows -->
           <tbody>
             <tr
-              v-for="(lobby, index) in lobbies"
+              v-for="(lobby, index) in lobbiesStore.activeLobbies"
               :key="lobby.id"
               :class="[
                 'grid grid-cols-[50%_20%_30%] px-4 py-2 text-primary',
@@ -67,15 +84,18 @@ const lobbies = [
               ]"
             >
               <td>{{ lobby.name }}</td>
-              <td>{{ lobby.numPlayers }}/{{ lobby.maxPlayers }}</td>
+              <td>{{ lobby.currentPlayers }}/{{ lobby.maxPlayers }}</td>
               <td>
                 <Button
-                  v-if="lobby.status === 'Waiting'"
+                  v-if="lobby.status === 'WAITING'"
                   text="Join"
                   variant="filled"
                   size="small"
+                  @click="joinLobby(lobby.id)"
                 />
                 <span v-else>{{ lobby.status }}</span>
+                <!--  FIXME: this button is for testing, delete later, when configure routing after join to lobby -->
+                <Button text="Leave" variant="filled" size="small" @click="leaveLobby(lobby.id)" />
               </td>
             </tr>
           </tbody>
