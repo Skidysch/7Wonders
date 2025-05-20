@@ -16,7 +16,7 @@ import Button from '@/components/Button.vue'
       </ul>
     </nav>
     <div>
-      <RouterLink to="/signin">
+      <RouterLink to="/auth">
         <Button text="Log in" />
       </RouterLink>
     </div>
