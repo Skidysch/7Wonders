@@ -79,8 +79,21 @@ export class AuthService {
     return { accessToken };
   }
 
-  async refreshAccessToken(userId: string, refreshToken: string) {
-    const user = await this.usersService.findOne(userId);
+  async verifyRefreshToken(refreshToken: string) {
+    try {
+      return await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+    } catch (err) {
+      throw new UnauthorizedException('Refresh token is invalid or expired');
+    }
+  }
+
+  async refreshAccessToken( refreshToken: string) {
+    // 1. Verify the refresh token
+    const payload = await this.verifyRefreshToken(refreshToken);
+
+    const user = await this.usersService.findOne(payload.sub);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -88,22 +101,7 @@ export class AuthService {
       throw new NotFoundException('Refresh token not found');
     }
 
-    // 1. Check if the refresh token is valid and not expired
-    let payload: any;
-    try {
-      payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
-      });
-    } catch (err) {
-      throw new UnauthorizedException('Refresh token is invalid or expired');
-    }
-
-    // 2. Check the credentials in the payload
-    if (payload.sub !== userId || payload.email !== user.email) {
-      throw new UnauthorizedException('Refresh token does not match user');
-    }
-
-    // 3. Check if the refresh token in the database matches the one in the payload
+    // 2. Check if the refresh token in the database matches the one in the payload
     const isRefreshTokenValid = await bcrypt.compare(
       refreshToken,
       user.refreshToken,

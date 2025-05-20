@@ -5,24 +5,26 @@ import {
   UnauthorizedException,
   UseGuards,
   Req,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { Request } from 'express';
+import { Request, Response } from 'express';
+import { JwtRefreshGuard } from './jwt-refresh.guard'
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly usersService: UsersService,
   ) {}
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(
+    @Res({ passthrough: true }) res: Response,
+    @Body() loginDto: LoginDto,
+  ) {
     const user = await this.authService.validateUser(
       loginDto.email,
       loginDto.password,
@@ -31,7 +33,47 @@ export class AuthController {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.authService.login(user);
+    const tokens = await this.authService.login(user);
+
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: false, // Set to true in production
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: false, // Set to true in production
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return { message: 'Logged in successfully' };
+  }
+
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh')
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies['refreshToken'];
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    const { accessToken } =
+      await this.authService.refreshAccessToken(refreshToken);
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: false, // Set to true in production
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    return { message: 'Access token refreshed successfully' };
   }
 
   @Post('register')
@@ -39,19 +81,21 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-  @UseGuards(JwtAuthGuard) 
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logout(@Req() req: Request) {
-    const user = req.user as any; 
-    await this.authService.logout(user.id);
-    return { message: 'Logged out successfully' };
-  }
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req.cookies['refreshToken'];
+    if (!refreshToken) {
+      throw new UnauthorizedException('Not logged in');
+    }
 
-  @Post('refresh')
-  async refresh(@Body() refreshDto: RefreshDto) {
-    return this.authService.refreshAccessToken(
-      refreshDto.userId,
-      refreshDto.refreshToken,
-    );
+    const payload = await this.authService.verifyRefreshToken(refreshToken);
+
+    await this.authService.logout(payload.sub);
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+
+    return { message: 'Logged out successfully' };
   }
 }

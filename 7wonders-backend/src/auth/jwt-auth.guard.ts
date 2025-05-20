@@ -1,33 +1,42 @@
 import {
+  CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import { JwtService } from '@nestjs/jwt';
+import * as cookie from 'cookie';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private readonly usersService: UsersService) {
-    super();
-  }
+export class JwtAuthGuard implements CanActivate {
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest();
 
-	// Trying to activate the standard JWT check
-    const can = (await super.canActivate(context)) as boolean;
-    if (!can) return false;
-
-    const user = request.user as { id: string };
-
-	// Checking the refreshToken in the database — if null, the user has logged out
-    const userInDb = await this.usersService.findOne(user.id);
-    if (!userInDb.refreshToken) {
-      throw new UnauthorizedException('Access denied: token was invalidated');
+    const cookieHeader = request.headers.cookie;
+    if (!cookieHeader) {
+      throw new UnauthorizedException('No cookies');
     }
 
-    return true;
+    const cookies = cookie.parse(cookieHeader);
+    const token = cookies['accessToken'];
+
+    if (!token) {
+      throw new UnauthorizedException('No access token');
+    }
+
+    try {
+      const payload = this.jwtService.verify(token);
+      const user = await this.usersService.findOneByEmail(payload.email);
+      request.user = user; // attach decoded user to request
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException('Auth guard error: Invalid token');
+    }
   }
 }

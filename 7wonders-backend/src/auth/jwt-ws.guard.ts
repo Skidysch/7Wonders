@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Socket } from 'socket.io';
+import * as cookie from 'cookie';
 
 @Injectable()
 export class JwtWsGuard implements CanActivate {
@@ -13,7 +14,13 @@ export class JwtWsGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const client: Socket = context.switchToWs().getClient<Socket>();
-    const token = client.handshake.auth?.token?.split(' ')[1]; // Cut the "Bearer" part
+    const cookies = client.handshake.headers.cookie;
+    if (!cookies) {
+      throw new UnauthorizedException('No cookies provided');
+    }
+
+    const parsedCookies = cookie.parse(cookies);
+    const token = parsedCookies['accessToken']; // Access the accessToken cookie
 
     if (!token) {
       throw new UnauthorizedException('No token provided');

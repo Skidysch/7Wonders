@@ -8,20 +8,40 @@ import {
   Delete,
   ParseUUIDPipe,
   ValidationPipe,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { GamesService } from './games.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
+import { Request } from 'express';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('games')
 export class GamesController {
   constructor(private readonly gamesService: GamesService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body(ValidationPipe) createGameDto: CreateGameDto) {
+  create(
+    @Req() req: Request,
+    @Body(ValidationPipe) createGameDto: CreateGameDto,
+  ) {
+    const user = req.user;
+    console.log('User', user)
+    if (!user) {
+      throw new Error('User not found');
+    }
     const createGameData: Prisma.GameCreateInput = createGameDto;
-    return this.gamesService.create(createGameData);
+    return this.gamesService.create({
+      ...createGameData,
+      hostedBy: {
+        connect: {
+          id: user.id,
+        },
+      },
+    });
   }
 
   @Get()
