@@ -12,13 +12,13 @@ import { LobbiesService } from './lobbies.service';
 import { UseGuards } from '@nestjs/common';
 import { JwtWsGuard } from '../auth/jwt-ws.guard';
 
+@UseGuards(JwtWsGuard)
 @WebSocketGateway({
   cors: {
     origin: '*', // или укажи свои фронт-орижины
   },
   namespace: '/lobby',
 })
-@UseGuards(JwtWsGuard) // добавляем защиту для сокетов
 export class LobbiesGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -45,12 +45,8 @@ export class LobbiesGateway
     const userId = (client as any).user.sub; // получаем userId из токена, который мы добавили в сокет в JwtWsGuard
 
     try {
-      await this.lobbiesService.addPlayer(gameId, userId);
+      await this.lobbiesService.addPlayerToLobby(gameId, userId);
       client.join(gameId); // добавляем сокет в комнату по gameId
-
-      const players = await this.lobbiesService.getLobbyPlayers(gameId);
-
-      this.server.to(gameId).emit('lobbyUpdated', players); // отправка обновленного лобби всем в комнате
     } catch (err) {
       client.emit('lobbyError', err.message);
     }
@@ -65,11 +61,8 @@ export class LobbiesGateway
     const userId = (client as any).user.sub; // получаем userId из токена, который мы добавили в сокет в JwtWsGuard
 
     try {
-      await this.lobbiesService.removePlayer(gameId, userId);
+      await this.lobbiesService.removePlayerFromLobby(gameId, userId);
       client.leave(gameId);
-
-      const players = await this.lobbiesService.getLobbyPlayers(gameId);
-      this.server.to(gameId).emit('lobbyUpdated', players);
     } catch (err) {
       client.emit('lobbyError', err.message);
     }

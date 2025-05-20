@@ -1,42 +1,45 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, UseGuards } from '@nestjs/common';
 import { LobbiesService } from './lobbies.service';
-import { Faction, FactionSide } from 'src/types/faction.enum';
+import { GameLobbyPreview } from 'src/types/lobby.interface';
+import { GamesService } from 'src/games/games.service';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('lobby')
 export class LobbiesController {
-  constructor(private readonly lobbiesService: LobbiesService) {}
+  constructor(
+    private readonly lobbiesService: LobbiesService,
+    private readonly gamesService: GamesService,
+  ) {}
+
+  @Get('/lobbies')
+  async getActiveLobbies(): Promise<GameLobbyPreview[]> {
+    return await this.gamesService.getActiveGamesWithLobbyInfo();
+  }
 
   @Get(':gameId/players')
   async getLobbyPlayers(@Param('gameId') gameId: string) {
     return await this.lobbiesService.getLobbyPlayers(gameId);
   }
 
-
-  // TODO: If we change the logic of joining the lobby, we may keep the faction in the body.
   @Post(':gameId/join')
-  async addPlayer(
+  async addPlayerToLobby(
     @Param('gameId') gameId: string,
-    @Body('userId') userId: string,
+    @CurrentUser() user: any,
   ) {
-    await this.lobbiesService.addPlayer(gameId, userId);
-    return { message: `Player ${userId} joined lobby ${gameId}` };
+    await this.lobbiesService.addPlayerToLobby(gameId, user.id);
+    return { message: `Player ${user.id} joined lobby ${gameId}` };
   }
 
-  @Delete(':gameId/leave/:userId')
-  async removePlayer(
+  @Post(':gameId/leave')
+  async removePlayerFromLobby(
     @Param('gameId') gameId: string,
-    @Param('userId') userId: string,
+    @CurrentUser() user: any,
   ) {
-    await this.lobbiesService.removePlayer(gameId, userId);
-    return { message: `Player ${userId} left lobby ${gameId}` };
+    // TODO: consider adding type for user from payload
+    await this.lobbiesService.removePlayerFromLobby(gameId, user.id);
+    return { message: `Player ${user.id} left lobby ${gameId}` };
   }
 
   @Patch(':gameId/start')

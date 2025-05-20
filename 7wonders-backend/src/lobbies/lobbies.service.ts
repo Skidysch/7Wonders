@@ -1,8 +1,18 @@
-import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { GamesService } from 'src/games/games.service';
 import { RedisService } from 'src/redis/redis.service';
-import { LobbyPlayer } from 'src/types/lobby-player.interface';
-import { getAvailableFactions, getRandomFaction, getRandomFactionSIde } from 'src/utlis/faction-helpers';
+import { LobbyData, LobbyPlayer } from 'src/types/lobby.interface';
+import {
+  getAvailableFactions,
+  getRandomFaction,
+  getRandomFactionSIde,
+} from 'src/utlis/faction-helpers';
 import { isLobbyFull, userIsInLobby } from 'src/utlis/lobby-helpers';
 
 @Injectable()
@@ -15,50 +25,86 @@ export class LobbiesService {
     private readonly redisService: RedisService,
   ) {}
 
-  async addPlayer(
+  async createLobby(
     gameId: string,
-    userId: string,
-  ) {
+    maxPlayers: number = 7,
+  ): Promise<LobbyData> {
+    const lobbyData: LobbyData = {
+      gameId,
+      maxPlayers,
+      players: [],
+    };
+    await this.redisService
+      .getClient()
+      .set(`${this.LOBBY_KEY}:${gameId}`, JSON.stringify(lobbyData));
+    return lobbyData;
+  }
+
+  async getLobby(gameId: string): Promise<LobbyData | null> {
+    const data = await this.redisService
+      .getClient()
+      .get(`${this.LOBBY_KEY}:${gameId}`);
+    return data ? JSON.parse(data) : null;
+  }
+
+  async addPlayerToLobby(gameId: string, userId: string): Promise<void> {
     try {
-      const players = await this.getLobbyPlayers(gameId);
-      if (isLobbyFull(players)) throw new BadRequestException('Lobby is full');
+      // Check if the game exists, if not, this line will throw an error from gamesService
+      await this.gamesService.findOne(gameId);
 
-      if (userIsInLobby(players, userId))
-        throw new BadRequestException('User is already in lobby');
+      let lobby: LobbyData | null = await this.getLobby(gameId);
+      if (!lobby) {
+        lobby = await this.createLobby(gameId);
+      }
 
-      console.log("available factions", getAvailableFactions(players));
-      const faction = getRandomFaction(getAvailableFactions(players));
-      const factionSide = getRandomFactionSIde();
+      if (isLobbyFull(lobby)) {
+        throw new BadRequestException('Lobby is full');
+      }
 
-      const playerData = JSON.stringify({
-        userId,
-        faction,
-        factionSide,
-      });
+      const player = await this.createLobbyPlayer(gameId, userId);
 
+      if (userIsInLobby(lobby, userId)) {
+        throw new BadRequestException('Player already in lobby');
+      }
+
+      lobby.players.push(player);
       await this.redisService
         .getClient()
-        .rpush(`${this.LOBBY_KEY}:${gameId}`, playerData);
-      console.log(`Player ${userId} added to lobby for game ${gameId}`);
+        .set(`${this.LOBBY_KEY}:${gameId}`, JSON.stringify(lobby));
+      console.log(`Player ${player.userId} added to lobby for game ${gameId}`);
     } catch (error) {
       console.error('Error adding player to lobby: ', error);
       throw new BadRequestException('Failed to add player to lobby');
     }
   }
 
-  async removePlayer(gameId: string, userId: string) {
+  async removePlayerFromLobby(gameId: string, userId: string) {
     try {
-      const player = await this.getLobbyPlayer(gameId, userId);
-      const playerData = JSON.stringify(player);
+      // Get the entire lobby data
+      const lobbyData = await this.getLobby(gameId);
+      if (!lobbyData) {
+        throw new NotFoundException('Lobby not found');
+      }
 
+      // Find and remove the player
+      const playerIndex = lobbyData.players.findIndex(
+        (p) => p.userId === userId,
+      );
+      if (playerIndex === -1) {
+        throw new NotFoundException('Player not found in lobby');
+      }
+
+      // Remove the player from the array
+      lobbyData.players.splice(playerIndex, 1);
+
+      // Update the lobby in Redis
       await this.redisService
         .getClient()
-        .lrem(`${this.LOBBY_KEY}:${gameId}`, 0, playerData);
+        .set(`${this.LOBBY_KEY}:${gameId}`, JSON.stringify(lobbyData));
       console.log(`Player ${userId} removed from lobby for game ${gameId}`);
 
       // If the lobby is empty, clear it and delete the game
-      const players = await this.getLobbyPlayers(gameId);
-      if (players.length === 0) {
+      if (lobbyData.players.length === 0) {
         await this.clearLobby(gameId);
         await this.gamesService.remove(gameId);
       }
@@ -70,10 +116,18 @@ export class LobbiesService {
 
   async getLobbyPlayers(gameId: string): Promise<LobbyPlayer[]> {
     try {
-      const players = await this.redisService
+      // Get the entire lobby object from Redis
+      const lobbyJson = await this.redisService
         .getClient()
-        .lrange(`${this.LOBBY_KEY}:${gameId}`, 0, -1);
-      return players.map((player) => JSON.parse(player) as LobbyPlayer);
+        .get(`${this.LOBBY_KEY}:${gameId}`);
+
+      if (!lobbyJson) {
+        return []; // Return empty array if lobby doesn't exist
+      }
+
+      // Parse the lobby JSON and extract the players array
+      const lobby = JSON.parse(lobbyJson);
+      return lobby.players || [];
     } catch (error) {
       console.error('Error getting lobby players:', error);
       throw new Error('Failed to get lobby players');
@@ -88,7 +142,25 @@ export class LobbiesService {
     return player;
   }
 
-  // FIXME: Do we have to deete lobby if game is started?
+  async createLobbyPlayer(
+    gameId: string,
+    userId: string,
+  ): Promise<LobbyPlayer> {
+    const lobby = await this.getLobby(gameId);
+    if (!lobby) throw new NotFoundException('Lobby not found');
+
+    const factions = getAvailableFactions(lobby);
+    const faction = getRandomFaction(factions);
+    const factionSide = getRandomFactionSIde();
+
+    return {
+      userId,
+      faction,
+      factionSide,
+    };
+  }
+
+  // FIXME: Do we have to delete lobby if game is started?
   async startGame(gameId: string) {
     try {
       const players = await this.getLobbyPlayers(gameId);

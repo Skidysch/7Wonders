@@ -1,25 +1,29 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { GameStatus, Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 import { LobbiesService } from 'src/lobbies/lobbies.service';
-import { LobbyPlayer } from 'src/types/lobby-player.interface';
+import { GameLobbyPreview, LobbyPlayer } from 'src/types/lobby.interface';
 
 @Injectable()
 export class GamesService {
   constructor(
     private readonly databaseService: DatabaseService,
     @Inject(forwardRef(() => LobbiesService))
-    private readonly lobbyService: LobbiesService,
+    private readonly lobbiesService: LobbiesService,
   ) {}
 
-  // TODO: Consider creating a game only if user is authenticated
   async create(createGameDto: Prisma.GameCreateInput) {
     const game = await this.databaseService.game.create({
       data: createGameDto,
     });
 
     // Add the host to the lobby
-    await this.lobbyService.addPlayer(game.id, game.hostedById as string);
+    await this.lobbiesService.addPlayerToLobby(game.id, game.hostedById!,);
 
     return game;
   }
@@ -86,6 +90,31 @@ export class GamesService {
     }
   }
 
+
+async getActiveGamesWithLobbyInfo(): Promise<GameLobbyPreview[]> {
+  // Get all games with WAITING status
+  const games = await this.databaseService.game.findMany({
+    where: { status: GameStatus.WAITING },
+    include: { hostedBy: true }
+  });
+
+  // Get lobby info for each game
+  const gamesWithLobbyInfo = await Promise.all(
+    games.map(async (game) => {
+      const lobby = await this.lobbiesService.getLobby(game.id);
+      return {
+        id: game.id,
+        name: game.name,
+        hostName: game.hostedBy!.username,
+        currentPlayers: lobby ? lobby.players.length : 0,
+        maxPlayers: lobby ? lobby.maxPlayers : 7,
+        status: game.status
+      };
+    })
+  );
+
+  return gamesWithLobbyInfo;
+}
+
   // TODO: Handle host leaving game (e.g. transfer host to another player)
 }
-  
