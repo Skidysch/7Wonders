@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import logo from '@/assets/logo.png'
 import Button from '@/components/Button.vue'
+import { useAuth } from '@/hooks/useAuth'
+
+const { isLoggedIn, logout } = useAuth()
 </script>
 <template>
   <header class="w-full flex justify-between py-4 items-center">
@@ -15,10 +18,14 @@ import Button from '@/components/Button.vue'
         <li><RouterLink to="/rules">Rules</RouterLink></li>
       </ul>
     </nav>
-    <div>
-      <RouterLink to="/auth">
+    <div class='flex gap-4'>
+      <RouterLink v-if="!isLoggedIn" to="/auth/login">
         <Button text="Log in" />
       </RouterLink>
+      <RouterLink v-else to="/profile">
+        <Button text="Profile" />
+      </RouterLink>
+      <Button v-if='isLoggedIn' text="Log out" @click='logout' />
     </div>
   </header>
 </template>

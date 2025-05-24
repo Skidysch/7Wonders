@@ -6,19 +6,18 @@ import {
   UseGuards,
   Req,
   Res,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Request, Response } from 'express';
-import { JwtRefreshGuard } from './jwt-refresh.guard'
+import { JwtRefreshGuard } from './jwt-refresh.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('login')
   async login(
@@ -52,6 +51,12 @@ export class AuthController {
     return { message: 'Logged in successfully' };
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getCurrentUser(@Req() req: Request) {
+    return req.user;
+  }
+
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   async refresh(
@@ -77,8 +82,27 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(
+    @Res({ passthrough: true }) res: Response,
+    @Body() registerDto: RegisterDto,
+  ) {
+    const tokens = await this.authService.register(registerDto);
+
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: false, // Set to true in production
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: false, // Set to true in production
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return { message: 'User successfully created' };
   }
 
   @UseGuards(JwtAuthGuard)

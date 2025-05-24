@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Button from '@/components/Button.vue'
-import hero from '@/assets/hero-bg.jpg'
+import heroBg from '@/assets/hero-bg.jpg'
 </script>
 <template>
   <div class="w-full h-full flex grow">
@@ -13,13 +13,17 @@ import hero from '@/assets/hero-bg.jpg'
       <h4 class="text-2xl">
         Log in to track your progress,<br />join a lobby,<br />and start your next epic game!
       </h4>
-      <div class="flex flex-col gap-5">
-        <Button text="Log in" variant='filled' />
-        <Button text="Find a lobby" />
+      <div class="flex flex-col gap-5 items-center">
+        <RouterLink to="/auth">
+          <Button text="Log in" variant="filled" />
+        </RouterLink>
+        <RouterLink to="/lobbies">
+          <Button text="Find a lobby" />
+        </RouterLink>
       </div>
     </div>
     <div class="relative w-1/2">
-      <img :src="hero" alt="Hero Image" class="w-full h-full object-cover" />
+      <img :src="heroBg" alt="Hero Image" class="w-full h-full object-cover" />
 
       <!-- Тень сверху -->
       <div
