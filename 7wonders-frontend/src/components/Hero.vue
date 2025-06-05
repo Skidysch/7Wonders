@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import Button from '@/components/Button.vue'
 import heroBg from '@/assets/hero-bg.jpg'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+if (!auth.user) {
+  auth.fetchUser()
+}
 </script>
 <template>
   <div class="w-full h-full flex grow">
@@ -14,7 +20,7 @@ import heroBg from '@/assets/hero-bg.jpg'
         Log in to track your progress,<br />join a lobby,<br />and start your next epic game!
       </h4>
       <div class="flex flex-col gap-5 items-center">
-        <RouterLink to="/auth">
+        <RouterLink v-if='!auth.isLoggedIn' to="/auth/login">
           <Button text="Log in" variant="filled" />
         </RouterLink>
         <RouterLink to="/lobbies">
