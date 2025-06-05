@@ -3,12 +3,18 @@ import HomeView from '@/views/HomeView.vue'
 import LobbiesView from '@/views/LobbiesView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
+import LobbyView from '@/views/LobbyView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
-  { path: '/lobbies', name: 'lobbies', component: LobbiesView },
   { path: '/auth/login', name: 'login', component: LoginView },
   { path: '/auth/register', name: 'register', component: RegisterView },
+  { path: '/lobbies', name: 'lobbies', component: LobbiesView },
+  {
+    path: '/lobby/:gameId',
+    name: 'Lobby',
+    component: LobbyView,
+  },
 ]
 
 const router = createRouter({

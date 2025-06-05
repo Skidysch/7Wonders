@@ -13,13 +13,21 @@ export interface GameLobbyPreview {
 // REST version
 export const useLobbiesStore = defineStore('lobbies', {
   state: () => ({
-    activeLobbies: [] as any[],
+    activeLobbies: [] as GameLobbyPreview[],
+    // TODO: create type for Lobby
+    currentLobby: null as any,
   }),
   actions: {
     async fetchActiveLobbies() {
       console.log('Fetching Lobbies')
       const response = await api.get('/lobby/lobbies')
       this.activeLobbies = response.data
+    },
+
+    async fetchLobby(gameId: string) {
+      console.log(`Fetching lobby ${gameId}`)
+      const response = await api.get(`/lobby/${gameId}`)
+      this.currentLobby = response.data
     },
 
     async joinLobby(gameId: string) {
@@ -39,5 +47,13 @@ export const useLobbiesStore = defineStore('lobbies', {
         console.error('Failed to leave lobby', error)
       }
     },
+
+    async startGame(gameId: string) {
+      try {
+        await api.patch(`/lobby/${gameId}/start`)
+      } catch (error) {
+        console.error('Failed to start game', error)
+      }
+    }
   },
 })

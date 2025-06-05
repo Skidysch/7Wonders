@@ -9,37 +9,34 @@ const router = useRouter()
 const lobbiesStore = useLobbiesStore()
 const gameName = ref('')
 
-onMounted(() => {
-  lobbiesStore.fetchActiveLobbies()
+let intervalId: ReturnType<typeof setInterval> | null = null
 
-  // Polling
-  const intervalId = setInterval(() => {
+onMounted(async () => {
+  await lobbiesStore.fetchActiveLobbies()
+  intervalId = setInterval(() => {
     lobbiesStore.fetchActiveLobbies()
   }, 5000)
-
-  onUnmounted(() => {
-    clearInterval(intervalId)
-  })
 })
 
-function joinLobby(gameId: string) {
-  lobbiesStore.joinLobby(gameId)
-  console.log('activeLobbies', lobbiesStore.activeLobbies)
-  // Router will handle navigation when lobby is joined successfully
-  // via the lobbyUpdated event in the store
-}
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
+})
 
-function leaveLobby(gameId: string) {
-  lobbiesStore.leaveLobby(gameId)
-  // Router will handle navigation when lobby is joined successfully
-  // via the lobbyUpdated event in the store
+async function joinLobby(gameId: string) {
+  // FIXME: If player already in lobby, just redirect
+  await lobbiesStore.joinLobby(gameId)
+  router.push(`/lobby/${gameId}`)
 }
 
 async function createGame() {
-  await api.post('/games', {
+  const response = await api.post('/games', {
     name: gameName.value,
   })
+  const game = response.data
   gameName.value = ''
+  router.push(`/lobby/${game.id}`)
 }
 </script>
 

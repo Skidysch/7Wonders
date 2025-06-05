@@ -19,6 +19,11 @@ export class LobbiesController {
     return await this.gamesService.getActiveGamesWithLobbyInfo();
   }
 
+  @Get(':gameId')
+  async getLobby(@Param('gameId') gameId: string) {
+    return await this.lobbiesService.getLobby(gameId);
+  }
+
   @Get(':gameId/players')
   async getLobbyPlayers(@Param('gameId') gameId: string) {
     return await this.lobbiesService.getLobbyPlayers(gameId);
