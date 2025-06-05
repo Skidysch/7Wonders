@@ -8,6 +8,7 @@ import {
 import { GamesService } from 'src/games/games.service';
 import { RedisService } from 'src/redis/redis.service';
 import { LobbyData, LobbyPlayer } from 'src/types/lobby.interface';
+import { UsersService } from 'src/users/users.service'
 import {
   getAvailableFactions,
   getRandomFaction,
@@ -22,15 +23,18 @@ export class LobbiesService {
   constructor(
     @Inject(forwardRef(() => GamesService))
     private readonly gamesService: GamesService,
+    private readonly usersService: UsersService,
     private readonly redisService: RedisService,
   ) {}
 
   async createLobby(
     gameId: string,
+    userId: string,
     maxPlayers: number = 7,
   ): Promise<LobbyData> {
     const lobbyData: LobbyData = {
       gameId,
+      hostId: userId,
       maxPlayers,
       players: [],
     };
@@ -54,7 +58,7 @@ export class LobbiesService {
 
       let lobby: LobbyData | null = await this.getLobby(gameId);
       if (!lobby) {
-        lobby = await this.createLobby(gameId);
+        lobby = await this.createLobby(gameId, userId);
       }
 
       if (isLobbyFull(lobby)) {
@@ -78,6 +82,7 @@ export class LobbiesService {
     }
   }
 
+  // TODO: add changing host ID if host leaves (probably need function to pick random player as host)
   async removePlayerFromLobby(gameId: string, userId: string) {
     try {
       // Get the entire lobby data
@@ -148,6 +153,8 @@ export class LobbiesService {
   ): Promise<LobbyPlayer> {
     const lobby = await this.getLobby(gameId);
     if (!lobby) throw new NotFoundException('Lobby not found');
+    const player = await this.usersService.findOne(userId);
+    if (!player) throw new NotFoundException('User not found');
 
     const factions = getAvailableFactions(lobby);
     const faction = getRandomFaction(factions);
@@ -155,12 +162,14 @@ export class LobbiesService {
 
     return {
       userId,
+      username: player.username,
       faction,
       factionSide,
     };
   }
 
   // FIXME: Do we have to delete lobby if game is started?
+  // FIXME: Probably, we also need to update status in Redis
   async startGame(gameId: string) {
     try {
       const players = await this.getLobbyPlayers(gameId);

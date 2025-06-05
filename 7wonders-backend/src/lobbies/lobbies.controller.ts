@@ -4,6 +4,7 @@ import { GameLobbyPreview } from 'src/types/lobby.interface';
 import { GamesService } from 'src/games/games.service';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { User } from '@prisma/client'
 
 @UseGuards(JwtAuthGuard)
 @Controller('lobby')
