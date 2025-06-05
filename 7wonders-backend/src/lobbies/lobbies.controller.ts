@@ -26,7 +26,7 @@ export class LobbiesController {
   @Post(':gameId/join')
   async addPlayerToLobby(
     @Param('gameId') gameId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
   ) {
     await this.lobbiesService.addPlayerToLobby(gameId, user.id);
     return { message: `Player ${user.id} joined lobby ${gameId}` };
@@ -35,9 +35,8 @@ export class LobbiesController {
   @Post(':gameId/leave')
   async removePlayerFromLobby(
     @Param('gameId') gameId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
   ) {
-    // TODO: consider adding type for user from payload
     await this.lobbiesService.removePlayerFromLobby(gameId, user.id);
     return { message: `Player ${user.id} left lobby ${gameId}` };
   }

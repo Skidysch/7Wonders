@@ -105,7 +105,6 @@ async getActiveGamesWithLobbyInfo(): Promise<GameLobbyPreview[]> {
       return {
         id: game.id,
         name: game.name,
-        hostName: game.hostedBy!.username,
         currentPlayers: lobby ? lobby.players.length : 0,
         maxPlayers: lobby ? lobby.maxPlayers : 7,
         status: game.status

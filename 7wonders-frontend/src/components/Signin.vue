@@ -26,13 +26,13 @@ const handleLogin = async () => {
 }
 </script>
 <template>
-  <div class="w-full grow mb-4 py-4 rounded-xl bg-black-25 flex gap-8 overflow-hidden">
-    <div class="w-1/2 pl-12 flex flex-col gap-4 justify-center">
+  <div class="w-full grow mb-4 py-4 rounded-xl bg-black-25 flex gap-12 overflow-hidden">
+    <div class="w-1/2 pl-12 flex flex-col gap-8 justify-center items-center">
       <!-- TODO: add reactive validation -->
       <form
         @submit.prevent="handleLogin"
         method="post"
-        class="w-full flex flex-col gap-8 justify-center items-center text-center"
+        class="w-3/4 flex flex-col gap-8 justify-center items-center text-center"
       >
         <h3 class="font-semibold text-4xl text-white text-shadow-lg">Welcome back</h3>
         <div class="w-full flex flex-col gap-4">
@@ -52,7 +52,7 @@ const handleLogin = async () => {
         <Button text="Log in" type="submit" class="self-center" />
         <p v-if="errorMessage" class="text-red-500 text-sm">{{ errorMessage }}</p>
       </form>
-      <div class="w-full flex gap-4 text-white">
+      <div class="w-3/4 flex justify-center gap-4 text-white">
         <span>Don't have an account?</span><RouterLink to='/auth/register'>Register</RouterLink>
       </div>
     </div>

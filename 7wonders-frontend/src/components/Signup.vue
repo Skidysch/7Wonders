@@ -34,12 +34,12 @@ const handleRegister = async () => {
         class="absolute inset-0 shadow-[inset_60px_60px_100px_rgba(0,0,0,0.25)] pointer-events-none"
       ></div>
     </div>
-    <div class="w-1/2 pr-12 flex flex-col gap-4 justify-center">
+    <div class="w-1/2 pr-12 flex flex-col gap-8 justify-center items-center">
       <!-- TODO: add reactive validation -->
       <form
         @submit.prevent="handleRegister"
         method="post"
-        class="w-full flex flex-col gap-12 justify-center items-center text-center"
+        class="w-3/4 flex flex-col gap-12 justify-center items-center text-center"
       >
         <h3 class="font-semibold text-4xl text-white text-shadow-lg">Create an account</h3>
         <div class="w-full flex flex-col gap-4">
@@ -65,7 +65,7 @@ const handleRegister = async () => {
         <Button text="Create" type="submit" class="self-center" />
         <p v-if="errorMessage" class="text-red-500 text-sm">{{ errorMessage }}</p>
       </form>
-      <div class="w-full flex gap-4 text-white">
+      <div class="w-3/4 flex justify-center gap-4 text-white">
         <span>Already have an account?</span> <RouterLink to="/auth/login">Log in</RouterLink>
       </div>
     </div>

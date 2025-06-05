@@ -44,7 +44,7 @@ async function createGame() {
 </script>
 
 <template>
-  <section class="mt-8 flex flex-col gap-10 items center">
+  <section class="mt-8 flex flex-col gap-10">
     <div class="py-4 px-12 rounded-xl bg-black-25 flex flex-col gap-2 items-start">
       <h3 class="font-semibold text-3xl text-white text-shadow-lg">Create game</h3>
       <form @submit.prevent="createGame" class="flex gap-2">
@@ -94,8 +94,6 @@ async function createGame() {
                   @click="joinLobby(lobby.id)"
                 />
                 <span v-else>{{ lobby.status }}</span>
-                <!--  FIXME: this button is for testing, delete later, when configure routing after join to lobby -->
-                <Button text="Leave" variant="filled" size="small" @click="leaveLobby(lobby.id)" />
               </td>
             </tr>
           </tbody>
