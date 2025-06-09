@@ -8,7 +8,7 @@ import {
 import { GamesService } from 'src/games/games.service';
 import { RedisService } from 'src/redis/redis.service';
 import { LobbyData, LobbyPlayer } from 'src/types/lobby.interface';
-import { UsersService } from 'src/users/users.service'
+import { UsersService } from 'src/users/users.service';
 import {
   getAvailableFactions,
   getRandomFaction,
@@ -82,7 +82,7 @@ export class LobbiesService {
     }
   }
 
-  // TODO: add changing host ID if host leaves (probably need function to pick random player as host)
+  
   async removePlayerFromLobby(gameId: string, userId: string) {
     try {
       // Get the entire lobby data
@@ -99,20 +99,32 @@ export class LobbiesService {
         throw new NotFoundException('Player not found in lobby');
       }
 
+      const isHostLeaving = lobbyData.hostId === userId;
+
       // Remove the player from the array
       lobbyData.players.splice(playerIndex, 1);
 
-      // Update the lobby in Redis
-      await this.redisService
-        .getClient()
-        .set(`${this.LOBBY_KEY}:${gameId}`, JSON.stringify(lobbyData));
-      console.log(`Player ${userId} removed from lobby for game ${gameId}`);
+      // If host is leaving and players remain, assign a new host
+      if (isHostLeaving && lobbyData.players.length > 0) {
+        const randomIndex = Math.floor(
+          Math.random() * lobbyData.players.length,
+        );
+        
+        lobbyData.hostId = lobbyData.players[randomIndex].userId;
+        console.log(`New host assigned: ${lobbyData.hostId}`);
+      }
 
       // If the lobby is empty, clear it and delete the game
       if (lobbyData.players.length === 0) {
         await this.clearLobby(gameId);
         await this.gamesService.remove(gameId);
       }
+
+      // Update the lobby in Redis
+      await this.redisService
+        .getClient()
+        .set(`${this.LOBBY_KEY}:${gameId}`, JSON.stringify(lobbyData));
+      console.log(`Player ${userId} removed from lobby for game ${gameId}`);
     } catch (error) {
       console.error('Error removing player from lobby:', error);
       throw new Error('Failed to remove player from lobby');
@@ -168,8 +180,6 @@ export class LobbiesService {
     };
   }
 
-  // FIXME: Do we have to delete lobby if game is started?
-  // FIXME: Probably, we also need to update status in Redis
   async startGame(gameId: string) {
     try {
       const players = await this.getLobbyPlayers(gameId);
