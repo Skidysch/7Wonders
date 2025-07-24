@@ -117,7 +117,7 @@ export const cards: Card[] = [
   {
     id: 'sawmill',
     name: 'Sawmill',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 3,
     provides: [{ type: 'resource', resources: ['WOOD', 'WOOD'] }],
@@ -125,7 +125,7 @@ export const cards: Card[] = [
   {
     id: 'sawmill',
     name: 'Sawmill',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 6,
     provides: [{ type: 'resource', resources: ['WOOD', 'WOOD'] }],
@@ -133,7 +133,7 @@ export const cards: Card[] = [
   {
     id: 'quarry',
     name: 'Quarry',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 3,
     provides: [{ type: 'resource', resources: ['STONE', 'STONE'] }],
@@ -141,7 +141,7 @@ export const cards: Card[] = [
   {
     id: 'quarry',
     name: 'Quarry',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 6,
     provides: [{ type: 'resource', resources: ['STONE', 'STONE'] }],
@@ -149,7 +149,7 @@ export const cards: Card[] = [
   {
     id: 'brickyard',
     name: 'Brickyard',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 3,
     provides: [{ type: 'resource', resources: ['CLAY', 'CLAY'] }],
@@ -157,7 +157,7 @@ export const cards: Card[] = [
   {
     id: 'brickyard',
     name: 'Brickyard',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 6,
     provides: [{ type: 'resource', resources: ['CLAY', 'CLAY'] }],
@@ -165,7 +165,7 @@ export const cards: Card[] = [
   {
     id: 'foundry',
     name: 'Foundry',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 3,
     provides: [{ type: 'resource', resources: ['ORE', 'ORE'] }],
@@ -173,7 +173,7 @@ export const cards: Card[] = [
   {
     id: 'foundry',
     name: 'Foundry',
-    age: 1,
+    age: 2,
     type: 'RESOURCE',
     minPlayers: 6,
     provides: [{ type: 'resource', resources: ['ORE', 'ORE'] }],

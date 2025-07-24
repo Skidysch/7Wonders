@@ -6,7 +6,7 @@ export interface PlayerState {
   username: string;
   faction: Faction;
   factionSide: FactionSide;
-  resources: Partial<Record<Resource, number>>;
+  resources: Resource[];
   coins: number;
   hand: Card[];
   playedCards: Card[];
@@ -38,6 +38,7 @@ export interface GameState {
   players: Record<string, PlayerState>; // userId → PlayerState
   age: 1 | 2 | 3;
   deck: Card[];
+  ageDeck: Card[]; // cards for the current age
   discardPile: Card[];
   turn: number;
   submittedActions: string[]; // userIds of players who submitted actions this round

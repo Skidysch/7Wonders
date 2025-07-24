@@ -1,6 +1,5 @@
+import { FactionSide } from '@prisma/client'
 import { CardEffect, Cost } from './card.interface'
-
-export type WonderSide = 'A' | 'B';
 
 export interface WonderStage {
   cost: Cost[];
@@ -11,7 +10,7 @@ export interface WonderStage {
 export interface Wonder {
   id: string;
   name: string;
-  side: WonderSide;
-  startingEffect?: CardEffect[];
+  side: FactionSide;
+  startingEffect: CardEffect[];
   stages: WonderStage[];
 }

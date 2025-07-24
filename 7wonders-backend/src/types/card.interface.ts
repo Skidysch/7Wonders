@@ -77,4 +77,9 @@ export type CardEffect =
       type: 'freeBuildPerAge';
       usages: number; // количество использований
       per: 'age'; // ограничение по эпохе
+    }
+  | {
+      type: 'playLastCard';
+      when: 'endOfAge'; // активируется в конце эпохи
+      amount: number;
     };

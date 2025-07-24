@@ -23,7 +23,7 @@ export class GamesService {
     });
 
     // Add the host to the lobby
-    await this.lobbiesService.addPlayerToLobby(game.id, game.hostedById!,);
+    await this.lobbiesService.addPlayerToLobby(game.id, game.hostedById!);
 
     return game;
   }
@@ -90,30 +90,27 @@ export class GamesService {
     }
   }
 
+  async getActiveGamesWithLobbyInfo(): Promise<GameLobbyPreview[]> {
+    // Get all games with WAITING status
+    const games = await this.databaseService.game.findMany({
+      where: { status: GameStatus.WAITING },
+      include: { hostedBy: true },
+    });
 
-async getActiveGamesWithLobbyInfo(): Promise<GameLobbyPreview[]> {
-  // Get all games with WAITING status
-  const games = await this.databaseService.game.findMany({
-    where: { status: GameStatus.WAITING },
-    include: { hostedBy: true }
-  });
+    // Get lobby info for each game
+    const gamesWithLobbyInfo = await Promise.all(
+      games.map(async (game) => {
+        const lobby = await this.lobbiesService.getLobby(game.id);
+        return {
+          id: game.id,
+          name: game.name,
+          currentPlayers: lobby ? lobby.players.length : 0,
+          maxPlayers: lobby ? lobby.maxPlayers : 7,
+          status: game.status,
+        };
+      }),
+    );
 
-  // Get lobby info for each game
-  const gamesWithLobbyInfo = await Promise.all(
-    games.map(async (game) => {
-      const lobby = await this.lobbiesService.getLobby(game.id);
-      return {
-        id: game.id,
-        name: game.name,
-        currentPlayers: lobby ? lobby.players.length : 0,
-        maxPlayers: lobby ? lobby.maxPlayers : 7,
-        status: game.status
-      };
-    })
-  );
-
-  return gamesWithLobbyInfo;
-}
-
-  // TODO: Handle host leaving game (e.g. transfer host to another player)
+    return gamesWithLobbyInfo;
+  }
 }

@@ -1,13 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { GameState, PlayerState } from 'src/types/game.interface';
-import { GamesStoreService } from './games-store.service';
+import { GameStoreService } from './games-store.service';
 import { LobbyPlayer } from 'src/types/lobby.interface';
+import { getGuilds } from './guilds';
+import { getAgeDeck, getStartingDeck, shuffle } from './utils';
+import { Card } from 'src/types/card.interface';
+import { resolveRound } from './resolver';
+import { wonders } from './wonders-list.const';
+import { Wonder } from 'src/types/wonder.interface';
+import { GameGateway } from './game.gateway';
 
 @Injectable()
-export class GamesEngineService {
-  constructor(private gamesStore: GamesStoreService) {}
+export class GameEngineService {
+  constructor(
+    private readonly gameStore: GameStoreService,
+    private readonly gameGateway: GameGateway,
+  ) {}
 
   async initializeGameState(gameId: string, players: LobbyPlayer[]) {
+    const numPlayers = players.length;
+    const deck = getStartingDeck(numPlayers);
     const gameState: GameState = {
       gameId,
       status: 'IN_PROGRESS',
@@ -15,22 +27,28 @@ export class GamesEngineService {
       age: 1,
       turn: 1,
       submittedActions: [],
-      deck: [], // This should be initialized with the current Age deck
-      guildPool: [], // This should be initialized with the selected guilds for Age 3
+      deck: deck,
+      ageDeck: getAgeDeck(1, deck),
+      guildPool: getGuilds(numPlayers),
       discardPile: [],
       players: {},
       currentPhase: 'draft', // Initial phase is drafting cards
     };
 
+    const { hands } = this.dealHands(gameState.ageDeck, players);
+
     for (const p of players) {
+      const wonder_key = `${p.faction}_${p.factionSide}`;
+      const wonder = wonders.find((w) => w.id === wonder_key) as Wonder;
+      const startingResource = wonder.startingEffect[0]['resources'];
+
       gameState.players[p.userId] = {
         userId: p.userId,
         username: p.username,
         faction: p.faction,
         factionSide: p.factionSide,
-        hand: [], // This should be initialized with the dealt cards
-        //   hand: this.dealInitialCards(), // Implement this
-        resources: {},
+        hand: hands[p.userId],
+        resources: startingResource,
         playedCards: [],
         discardedCards: [],
         builtStages: [],
@@ -39,7 +57,8 @@ export class GamesEngineService {
       };
     }
 
-    await this.gamesStore.saveGame(gameId, gameState);
+    await this.gameStore.saveGame(gameId, gameState);
+    this.gameGateway.sendGameStateToPlayers(gameId, gameState);
   }
 
   async playCard(
@@ -47,7 +66,7 @@ export class GamesEngineService {
     userId: string,
     cardId: string,
   ): Promise<GameState> {
-    const game = await this.gamesStore.getGame(gameId);
+    const game = await this.gameStore.getGame(gameId);
     const player = game.players[userId];
 
     const cardIndex = player.hand.findIndex((card) => card.id === cardId);
@@ -61,10 +80,10 @@ export class GamesEngineService {
     this.markPlayerActionSubmitted(game, userId);
 
     if (this.allPlayersSubmitted(game)) {
-      this.resolveRound(game);
+      resolveRound(game);
     }
 
-    await this.gamesStore.saveGame(gameId, game);
+    await this.gameStore.saveGame(gameId, game);
     return game;
   }
 
@@ -73,7 +92,7 @@ export class GamesEngineService {
     userId: string,
     cardId: string,
   ): Promise<GameState> {
-    const game = await this.gamesStore.getGame(gameId);
+    const game = await this.gameStore.getGame(gameId);
     const player = game.players[userId];
 
     // TODO: Check player can afford next wonder stage, validate resources
@@ -94,10 +113,10 @@ export class GamesEngineService {
     this.markPlayerActionSubmitted(game, userId);
 
     if (this.allPlayersSubmitted(game)) {
-      this.resolveRound(game);
+      resolveRound(game);
     }
 
-    await this.gamesStore.saveGame(gameId, game);
+    await this.gameStore.saveGame(gameId, game);
     return game;
   }
 
@@ -106,7 +125,7 @@ export class GamesEngineService {
     userId: string,
     cardId: string,
   ): Promise<GameState> {
-    const game = await this.gamesStore.getGame(gameId);
+    const game = await this.gameStore.getGame(gameId);
     const player = game.players[userId];
 
     const cardIndex = player.hand.findIndex((card) => card.id === cardId);
@@ -121,10 +140,10 @@ export class GamesEngineService {
     this.markPlayerActionSubmitted(game, userId);
 
     if (this.allPlayersSubmitted(game)) {
-      this.resolveRound(game);
+      resolveRound(game);
     }
 
-    await this.gamesStore.saveGame(gameId, game);
+    await this.gameStore.saveGame(gameId, game);
     return game;
   }
 
@@ -138,33 +157,6 @@ export class GamesEngineService {
     return game.submittedActions.length === Object.keys(game.players).length;
   }
 
-  private resolveRound(game: GameState) {
-    // Rotate hands, apply effects, clear submission tracker
-    const playerIds = Object.keys(game.players);
-    const hands = playerIds.map((id) => game.players[id].hand);
-
-    hands.unshift(hands.pop()!);
-    if (game.age !== 2) {
-      // pass hands clockwise
-      hands.unshift(hands.pop()!);
-    } else {
-      // For Age 2, pass hands counter-clockwise
-      hands.push(hands.shift()!);
-    }
-
-    playerIds.forEach((id, i) => {
-      game.players[id].hand = hands[i];
-    });
-
-    game.submittedActions = []; // Clear submitted actions;
-    game.turn += 1;
-
-    // Transition to next Age or scoring if turn exceeds 6
-    if (game.turn > 6) {
-      this.handleEndOfAge(game);
-    }
-  }
-
   private handleEndOfAge(game: GameState) {
     game.age += 1;
     game.turn = 1;
@@ -173,7 +165,24 @@ export class GamesEngineService {
       game.status = 'FINISHED';
       // TODO: Final scoring
     } else {
-      // TODO: Deal new Age cards
+      game.ageDeck = getAgeDeck(game.age, game.deck, game.guildPool);
     }
+  }
+
+  private dealHands(
+    ageDeck: Card[],
+    players: LobbyPlayer[],
+  ): {
+    hands: Record<string, Card[]>;
+  } {
+    const shuffled = shuffle(ageDeck);
+    const hands: Record<string, Card[]> = {};
+
+    for (const player of players) {
+      const hand = shuffled.slice(0, 7);
+      hands[player.userId] = hand;
+    }
+
+    return { hands };
   }
 }

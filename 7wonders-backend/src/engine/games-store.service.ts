@@ -3,7 +3,7 @@ import { RedisService } from 'src/redis/redis.service';
 import { GameState } from 'src/types/game.interface';
 
 @Injectable()
-export class GamesStoreService {
+export class GameStoreService {
   constructor(private redisService: RedisService) {}
 
   private getRedisKey(gameId: string): string {

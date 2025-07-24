@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { GamesEngineService } from 'src/engine/games-engine.service';
+import { GameEngineService } from 'src/engine/game-engine.service';
 import { GamesService } from 'src/games/games.service';
 import { RedisService } from 'src/redis/redis.service';
 import { LobbyData, LobbyPlayer } from 'src/types/lobby.interface';
@@ -24,8 +24,8 @@ export class LobbiesService {
   constructor(
     @Inject(forwardRef(() => GamesService))
     private readonly gamesService: GamesService,
-    @Inject(forwardRef(() => GamesEngineService))
-    private readonly gamesEngineService: GamesEngineService,
+    @Inject(forwardRef(() => GameEngineService))
+    private readonly gameEngineService: GameEngineService,
     private readonly usersService: UsersService,
     private readonly redisService: RedisService,
   ) {}
@@ -193,7 +193,7 @@ export class LobbiesService {
         status: 'IN_PROGRESS',
       });
 
-      await this.gamesEngineService.initializeGameState(gameId, players);
+      await this.gameEngineService.initializeGameState(gameId, players);
       await this.clearLobby(gameId);
 
       console.log(`Game ${gameId} started successfully`);

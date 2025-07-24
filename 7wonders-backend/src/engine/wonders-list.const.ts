@@ -3,9 +3,9 @@ import { Wonder } from 'src/types/wonder.interface';
 export const wonders: Wonder[] = [
   // Alexandria
   {
-    id: 'alexandria_A',
+    id: 'ALEXANDRIA_DAY',
     name: 'Alexandria',
-    side: 'A',
+    side: 'DAY',
     startingEffect: [{ type: 'resource', resources: ['GLASS'] }],
     stages: [
       {
@@ -28,9 +28,9 @@ export const wonders: Wonder[] = [
     ],
   },
   {
-    id: 'alexandria_B',
+    id: 'ALEXANDRIA_NIGHT',
     name: 'Alexandria',
-    side: 'B',
+    side: 'NIGHT',
     startingEffect: [{ type: 'resource', resources: ['GLASS'] }],
     stages: [
       {
@@ -65,9 +65,9 @@ export const wonders: Wonder[] = [
 
   // Babylon
   {
-    id: 'babylon_A',
+    id: 'BABYLON_DAY',
     name: 'Babylon',
-    side: 'A',
+    side: 'DAY',
     startingEffect: [{ type: 'resource', resources: ['CLAY'] }],
     stages: [
       {
@@ -89,9 +89,9 @@ export const wonders: Wonder[] = [
     ],
   },
   {
-    id: 'babylon_B',
+    id: 'BABYLON_NIGHT',
     name: 'Babylon',
-    side: 'B',
+    side: 'NIGHT',
     startingEffect: [{ type: 'resource', resources: ['CLAY'] }],
     stages: [
       {
@@ -100,8 +100,13 @@ export const wonders: Wonder[] = [
       },
       {
         cost: [{ type: 'resource', resources: ['WOOD', 'WOOD', 'GLASS'] }],
-        // TODO: Play last card in each age
-        provides: [],
+        provides: [
+          {
+            type: 'playLastCard',
+            when: 'endOfAge',
+            amount: 1,
+          },
+        ],
       },
       {
         cost: [
@@ -116,9 +121,9 @@ export const wonders: Wonder[] = [
 
   // Ephesus
   {
-    id: 'ephesus_A',
+    id: 'EPHESUS_DAY',
     name: 'Ephesus',
-    side: 'A',
+    side: 'DAY',
     startingEffect: [{ type: 'resource', resources: ['PAPER'] }],
     stages: [
       {
@@ -136,9 +141,9 @@ export const wonders: Wonder[] = [
     ],
   },
   {
-    id: 'ephesus_B',
+    id: 'EPHESUS_NIGHT',
     name: 'Ephesus',
-    side: 'B',
+    side: 'NIGHT',
     startingEffect: [{ type: 'resource', resources: ['PAPER'] }],
     stages: [
       {
@@ -167,9 +172,9 @@ export const wonders: Wonder[] = [
 
   // Giza
   {
-    id: 'giza_A',
+    id: 'GIZA_DAY',
     name: 'Giza',
-    side: 'A',
+    side: 'DAY',
     startingEffect: [{ type: 'resource', resources: ['STONE'] }],
     stages: [
       {
@@ -189,9 +194,9 @@ export const wonders: Wonder[] = [
     ],
   },
   {
-    id: 'giza_B',
+    id: 'GIZA_NIGHT',
     name: 'Giza',
-    side: 'B',
+    side: 'NIGHT',
     startingEffect: [{ type: 'resource', resources: ['STONE'] }],
     stages: [
       {
@@ -220,9 +225,9 @@ export const wonders: Wonder[] = [
 
   // Halicarnassus
   {
-    id: 'halicarnassus_A',
+    id: 'HALICARNASSUS_DAY',
     name: 'Halicarnassus',
-    side: 'A',
+    side: 'DAY',
     startingEffect: [{ type: 'resource', resources: ['TEXTILE'] }],
     stages: [
       {
@@ -247,9 +252,9 @@ export const wonders: Wonder[] = [
     ],
   },
   {
-    id: 'halicarnassus_B',
+    id: 'HALICARNASSUS_NIGHT',
     name: 'Halicarnassus',
-    side: 'B',
+    side: 'NIGHT',
     startingEffect: [{ type: 'resource', resources: ['TEXTILE'] }],
     stages: [
       {
@@ -292,9 +297,9 @@ export const wonders: Wonder[] = [
 
   // Olympia
   {
-    id: 'olympia_A',
+    id: 'OLYMPIA_DAY',
     name: 'Olympia',
-    side: 'A',
+    side: 'DAY',
     startingEffect: [{ type: 'resource', resources: ['WOOD'] }],
     stages: [
       {
@@ -312,9 +317,9 @@ export const wonders: Wonder[] = [
     ],
   },
   {
-    id: 'olympia_B',
+    id: 'OLYMPIA_NIGHT',
     name: 'Olympia',
-    side: 'B',
+    side: 'NIGHT',
     startingEffect: [{ type: 'resource', resources: ['WOOD'] }],
     stages: [
       {
@@ -340,9 +345,9 @@ export const wonders: Wonder[] = [
 
   // Rhodos
   {
-    id: 'rhodos_A',
+    id: 'RHODOS_DAY',
     name: 'Rhodos',
-    side: 'A',
+    side: 'DAY',
     startingEffect: [{ type: 'resource', resources: ['ORE'] }],
     stages: [
       {
@@ -360,9 +365,9 @@ export const wonders: Wonder[] = [
     ],
   },
   {
-    id: 'rhodos_B',
+    id: 'RHODOS_NIGHT',
     name: 'Rhodos',
-    side: 'B',
+    side: 'NIGHT',
     startingEffect: [{ type: 'resource', resources: ['ORE'] }],
     stages: [
       {
