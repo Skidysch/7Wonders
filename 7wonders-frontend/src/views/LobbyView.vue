@@ -59,8 +59,9 @@ async function leaveLobby(gameId: string) {
   router.push('/lobbies')
 }
 
-function startGame(gameId: string) {
-  lobbiesStore.startGame(gameId)
+async function startGame(gameId: string) {
+  await lobbiesStore.startGame(gameId)
+  router.push(`/game/${gameId}`)
 }
 </script>
 
@@ -138,7 +139,7 @@ function startGame(gameId: string) {
     </div>
     <div class="px-8 py-6 rounded-xl bg-black-25 flex justify-between">
       <!-- TODO: handle redirect to game (either here or in startGame function) -->
-       <!-- TODO: consider readycheck (when switching to WebSocket, because it will be tough for server to handle all readycheck taps via fetching, needs realtime and simultaneous handling) -->
+      <!-- TODO: consider readycheck (when switching to WebSocket, because it will be tough for server to handle all readycheck taps via fetching, needs realtime and simultaneous handling) -->
       <div class="flex gap-4">
         <Button text="Start" variant="filled" size="small" @click="startGame(gameId)" />
         <!-- <Button text="Add bot" variant="filled" size="small" />
@@ -147,7 +148,12 @@ function startGame(gameId: string) {
       <div class="flex gap-4">
         <Button text="Leave" variant="filled" size="small" @click="leaveLobby(gameId)" />
         <!-- TODO: add disband both here and on backend -->
-        <Button v-if='auth.user?.id === lobby?.hostId' text="Disband" variant="filled" size="small" />
+        <Button
+          v-if="auth.user?.id === lobby?.hostId"
+          text="Disband"
+          variant="filled"
+          size="small"
+        />
       </div>
     </div>
   </section>

@@ -6,3 +6,5 @@ export type Faction =
   | 'HALICARNASSUS'
   | 'OLYMPIA'
   | 'RHODES'
+
+export type FactionSide = 'DAY' | 'NIGHT'

@@ -4,6 +4,7 @@ import LobbiesView from '@/views/LobbiesView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import LobbyView from '@/views/LobbyView.vue'
+import GameRoom from '@/components/GameRoom.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
@@ -14,6 +15,11 @@ const routes = [
     path: '/lobby/:gameId',
     name: 'Lobby',
     component: LobbyView,
+  },
+  {
+    path: '/game/:gameId',
+    name: 'GameRoom',
+    component: GameRoom,
   },
 ]
 
